@@ -1,3 +1,3 @@
 # Hoteleria-Front
 >[!IMPORTANT]
->Cambiar la estructura del proyecto
+>Login y register funcional, agregar diseño y alertas
