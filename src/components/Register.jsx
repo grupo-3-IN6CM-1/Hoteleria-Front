@@ -7,10 +7,37 @@ import {
   validatePasswordMessage,
   passwordConfirmationMessage
 } from "../shared/validators";
-import { isValidEmail, isValidUsername, validateExistEmailMessage, validateExistUsernameMessage } from "../shared/validators/auth/authValidator.jsx";
+import {
+  isValidEmail,
+  isValidUsername,
+  validateExistEmailMessage,
+  validateExistUsernameMessage
+} from "../shared/validators/auth/authValidator.jsx";
+import { Form, Input, Button, Typography, Row, Col, Alert, Switch } from "antd";
+import { motion } from "framer-motion";
+import { BulbOutlined, BulbFilled } from "@ant-design/icons";
+import { useDarkMode } from "../shared/context/DarkModeContext";
+
+const { Title, Text } = Typography;
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut", staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
 
 export const Register = ({ switchAuthHandler }) => {
   const navigate = useNavigate();
+  const { darkMode, toggleDarkMode } = useDarkMode();
+
   const [formState, setFormState] = useState({
     email: { value: "", isValid: false, showError: false },
     username: { value: "", isValid: false, showError: false },
@@ -21,24 +48,24 @@ export const Register = ({ switchAuthHandler }) => {
     successMessage: "",
     errorMessage: "",
     emailExists: false,
-    usernameExists: false
+    usernameExists: false,
   });
 
   const handleInputValueChange = (value, field) => {
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       [field]: { ...prev[field], value }
     }));
 
     if (field === "email") {
       const isValid = isValidEmail(value);
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         email: { ...prev.email, isValid, showError: !isValid }
       }));
     } else if (field === "username") {
       const isValid = isValidUsername(value);
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         username: { ...prev.username, isValid, showError: !isValid }
       }));
@@ -67,7 +94,7 @@ export const Register = ({ switchAuthHandler }) => {
       default:
         break;
     }
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       [field]: { ...prev[field], isValid, showError: !isValid }
     }));
@@ -88,21 +115,25 @@ export const Register = ({ switchAuthHandler }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData)
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.success) {
-          setFormState(prev => ({ ...prev, successMessage: "Registration successful!", errorMessage: "" }));
-          setTimeout(() => navigate("/"), 2000); // Redirige a la página de bienvenida
+          setFormState((prev) => ({
+            ...prev,
+            successMessage: "¡Registro exitoso!",
+            errorMessage: ""
+          }));
+          setTimeout(() => navigate("/"), 2000);
         } else {
-          setFormState(prev => ({
+          setFormState((prev) => ({
             ...prev,
             successMessage: "",
             errorMessage: data.msg || "Hubo un error al registrar el usuario."
           }));
         }
       })
-      .catch(error => {
-        setFormState(prev => ({
+      .catch(() => {
+        setFormState((prev) => ({
           ...prev,
           successMessage: "",
           errorMessage: "Error en la conexión. Intenta nuevamente."
@@ -110,109 +141,223 @@ export const Register = ({ switchAuthHandler }) => {
       });
   };
 
-  const isDisabled = !Object.values(formState).every(
-    f => typeof f !== "string" ? f.isValid !== false : true
-  );
+  const isDisabled =
+    !Object.values(formState).every(
+      (f) => typeof f !== "string" ? f.isValid !== false : true
+    ) || formState.usernameExists || formState.emailExists;
+
+  const colors = {
+    bg: darkMode ? "#0e0e0e" : "#f0f2f5",
+    card: darkMode ? "#1e1e1e" : "#fff",
+    text: darkMode ? "#eaeaea" : "#1d1f27",
+    secondary: darkMode ? "#aaa" : "#595959",
+    border: darkMode ? "#444" : "#ccc"
+  };
 
   return (
-    <div className="register-page-wrapper">
-      <div className="register-card">
-        <div className="register-panel-left">
-          <h2>Hola, Bienvenido!</h2>
-          <p className="text-center">Si ya tienes una cuenta puedes inicar sesión aquí</p>
-          <button className="btn btn-outline-light mt-3" onClick={switchAuthHandler}>Log in</button>
-        </div>
-
-        <div className="register-panel-right">
-          <h3 className="text-center mb-4">Crea una cuenta</h3>
-          <form onSubmit={handleRegister}>
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <input
-                  type="text"
-                  className={`form-control ${formState.name.showError ? "is-invalid" : ""}`}
-                  placeholder="First Name"
-                  value={formState.name.value}
-                  onChange={(e) => handleInputValueChange(e.target.value, "name")}
-                  onBlur={(e) => handleInputValidationOnBlur(e.target.value, "name")}
-                />
-                {formState.name.showError && <div className="invalid-feedback">First name is required.</div>}
-              </div>
-              <div className="col-md-6 mb-3">
-                <input
-                  type="text"
-                  className={`form-control ${formState.surname.showError ? "is-invalid" : ""}`}
-                  placeholder="Last Name"
-                  value={formState.surname.value}
-                  onChange={(e) => handleInputValueChange(e.target.value, "surname")}
-                  onBlur={(e) => handleInputValidationOnBlur(e.target.value, "surname")}
-                />
-                {formState.surname.showError && <div className="invalid-feedback">Last name is required.</div>}
-              </div>
-            </div>
-
-            <input
-              type="text"
-              className={`form-control mb-3 ${formState.username.showError || formState.usernameExists ? "is-invalid" : ""}`}
-              placeholder="Username"
-              value={formState.username.value}
-              onChange={(e) => handleInputValueChange(e.target.value, "username")}
-              onBlur={(e) => handleInputValidationOnBlur(e.target.value, "username")}
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: colors.bg,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24
+      }}
+    >
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        style={{
+          width: "100%",
+          maxWidth: 900,
+          backgroundColor: colors.card,
+          borderRadius: 12,
+          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "row"
+        }}
+      >
+        <motion.div
+          variants={itemVariants}
+          style={{
+            flex: 1,
+            background: "linear-gradient(135deg, #ff6ec4 0%, #7873f5 100%)",
+            color: "#fff",
+            padding: "48px 32px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            gap: 16,
+            position: "relative"
+          }}
+        >
+          <div style={{ position: "absolute", top: 16, right: 16 }}>
+            <Switch
+              checked={darkMode}
+              onChange={toggleDarkMode}
+              checkedChildren={<BulbFilled />}
+              unCheckedChildren={<BulbOutlined />}
             />
-            {formState.username.showError && <div className="invalid-feedback">Username is invalid (3-20 characters, alphanumeric or underscore).</div>}
-            {formState.usernameExists && <div className="invalid-feedback">{validateExistUsernameMessage}</div>}
+          </div>
+          <Title style={{ color: "#fff" }}>Hola, Bienvenido!</Title>
+          <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
+            Si ya tienes una cuenta puedes iniciar sesión aquí
+          </Text>
+          <Button
+            type="default"
+            onClick={switchAuthHandler}
+            style={{ marginTop: 24, width: "180px" }}
+            size="large"
+          >
+            Log in
+          </Button>
+        </motion.div>
 
-            <input
-              type="email"
-              className={`form-control mb-3 ${formState.email.showError || formState.emailExists ? "is-invalid" : ""}`}
-              placeholder="Email"
-              value={formState.email.value}
-              onChange={(e) => handleInputValueChange(e.target.value, "email")}
-              onBlur={(e) => handleInputValidationOnBlur(e.target.value, "email")}
-            />
-            {formState.email.showError && <div className="invalid-feedback">{emailValidationMessage}</div>}
-            {formState.emailExists && <div className="invalid-feedback">{validateExistEmailMessage}</div>}
+        <motion.div
+          variants={itemVariants}
+          style={{
+            flex: 1.2,
+            padding: "48px 40px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center"
+          }}
+        >
+          <Title level={3} style={{ marginBottom: 24, textAlign: "center", color: colors.text }}>
+            Crea una cuenta
+          </Title>
 
-            <input
-              type="password"
-              className={`form-control mb-3 ${formState.password.showError ? "is-invalid" : ""}`}
-              placeholder="Password"
-              value={formState.password.value}
-              onChange={(e) => handleInputValueChange(e.target.value, "password")}
-              onBlur={(e) => handleInputValidationOnBlur(e.target.value, "password")}
-            />
-            {formState.password.showError && <div className="invalid-feedback">{validatePasswordMessage}</div>}
+          <Form layout="vertical" onSubmitCapture={handleRegister} noValidate>
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  label={<span style={{ color: colors.text }}>First Name</span>}
+                  validateStatus={formState.name.showError ? "error" : ""}
+                  help={formState.name.showError && "First name is required."}
+                  required
+                  hasFeedback
+                >
+                  <Input
+                    placeholder="First Name"
+                    value={formState.name.value}
+                    onChange={(e) => handleInputValueChange(e.target.value, "name")}
+                    onBlur={(e) => handleInputValidationOnBlur(e.target.value, "name")}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  label={<span style={{ color: colors.text }}>Last Name</span>}
+                  validateStatus={formState.surname.showError ? "error" : ""}
+                  help={formState.surname.showError && "Last name is required."}
+                  required
+                  hasFeedback
+                >
+                  <Input
+                    placeholder="Last Name"
+                    value={formState.surname.value}
+                    onChange={(e) => handleInputValueChange(e.target.value, "surname")}
+                    onBlur={(e) => handleInputValidationOnBlur(e.target.value, "surname")}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <input
-              type="password"
-              className={`form-control mb-3 ${formState.passwordConfir.showError ? "is-invalid" : ""}`}
-              placeholder="Confirm Password"
-              value={formState.passwordConfir.value}
-              onChange={(e) => handleInputValueChange(e.target.value, "passwordConfir")}
-              onBlur={(e) => handleInputValidationOnBlur(e.target.value, "passwordConfir")}
-            />
-            {formState.passwordConfir.showError && <div className="invalid-feedback">{passwordConfirmationMessage}</div>}
+            <Form.Item
+              label={<span style={{ color: colors.text }}>Username</span>}
+              validateStatus={formState.username.showError || formState.usernameExists ? "error" : ""}
+              help={
+                (formState.username.showError &&
+                  "Username is invalid (3-20 characters, alphanumeric or underscore).") ||
+                (formState.usernameExists && validateExistUsernameMessage)
+              }
+              required
+              hasFeedback
+            >
+              <Input
+                placeholder="Username"
+                value={formState.username.value}
+                onChange={(e) => handleInputValueChange(e.target.value, "username")}
+                onBlur={(e) => handleInputValidationOnBlur(e.target.value, "username")}
+              />
+            </Form.Item>
 
-            <div className="d-grid mt-4">
-              <button type="submit" className="btn btn-primary" disabled={isDisabled || formState.usernameExists || formState.emailExists}>
+            <Form.Item
+              label={<span style={{ color: colors.text }}>Email</span>}
+              validateStatus={formState.email.showError || formState.emailExists ? "error" : ""}
+              help={
+                (formState.email.showError && emailValidationMessage) ||
+                (formState.emailExists && validateExistEmailMessage)
+              }
+              required
+              hasFeedback
+            >
+              <Input
+                type="email"
+                placeholder="Email"
+                value={formState.email.value}
+                onChange={(e) => handleInputValueChange(e.target.value, "email")}
+                onBlur={(e) => handleInputValidationOnBlur(e.target.value, "email")}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span style={{ color: colors.text }}>Password</span>}
+              validateStatus={formState.password.showError ? "error" : ""}
+              help={formState.password.showError && validatePasswordMessage}
+              required
+              hasFeedback
+            >
+              <Input.Password
+                placeholder="Password"
+                value={formState.password.value}
+                onChange={(e) => handleInputValueChange(e.target.value, "password")}
+                onBlur={(e) => handleInputValidationOnBlur(e.target.value, "password")}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span style={{ color: colors.text }}>Confirm Password</span>}
+              validateStatus={formState.passwordConfir.showError ? "error" : ""}
+              help={formState.passwordConfir.showError && passwordConfirmationMessage}
+              required
+              hasFeedback
+            >
+              <Input.Password
+                placeholder="Confirm Password"
+                value={formState.passwordConfir.value}
+                onChange={(e) => handleInputValueChange(e.target.value, "passwordConfir")}
+                onBlur={(e) => handleInputValidationOnBlur(e.target.value, "passwordConfir")}
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                size="large"
+                disabled={isDisabled}
+                style={{ fontWeight: "600" }}
+              >
                 Register
-              </button>
-            </div>
+              </Button>
+            </Form.Item>
+          </Form>
 
-            {formState.successMessage && (
-              <div className="alert alert-success mt-3 text-center">
-                {formState.successMessage}
-              </div>
-            )}
-
-            {formState.errorMessage && (
-              <div className="alert alert-danger mt-3 text-center">
-                {formState.errorMessage}
-              </div>
-            )}
-          </form>
-        </div>
-      </div>
+          {formState.successMessage && (
+            <Alert type="success" message={formState.successMessage} showIcon style={{ marginTop: 16 }} />
+          )}
+          {formState.errorMessage && (
+            <Alert type="error" message={formState.errorMessage} showIcon style={{ marginTop: 16 }} />
+          )}
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
