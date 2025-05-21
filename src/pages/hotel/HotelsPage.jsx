@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Layout, Typography, Button, Avatar } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { Sidebar } from "../../components/sidebar/Sidebar.jsx";
 import { HotelsList } from "../../components/hotel/HotelsList.jsx";
-import { HotelsManager } from "../../components/hotel/HotelsManager.jsx";
 import { UserProfileModal } from "../../components/UserProfileModal";
 
 const { Header, Content } = Layout;
@@ -11,13 +10,9 @@ const { Title } = Typography;
 
 export const HotelsPage = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  const { role } = user;
+  // const { role } = user;  // no usamos el rol para ahora mostrar la lista
 
   const [modalVisible, setModalVisible] = useState(false);
-
-  useEffect(() => {
-    // Podrías cargar usuario aquí si fuera necesario
-  }, []);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -52,8 +47,8 @@ export const HotelsPage = () => {
         </Header>
 
         <Content style={{ padding: 20, background: "#f0f2f5" }}>
-          {role === "HOTEL_ADMIN" && <HotelsList />}
-          {(role === "CLIENT" || role === "PLATFORM_ADMIN") && <HotelsManager />}
+          {/* Mostramos HotelsList sin importar rol para probar */}
+          <HotelsList />
         </Content>
       </Layout>
 
