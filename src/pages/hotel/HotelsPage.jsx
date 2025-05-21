@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Button, Layout, Avatar } from "antd";
+import { Layout, Typography, Button, Avatar } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import { Sidebar } from "../../components/sidebar/Sidebar.jsx";
+import { HotelsList } from "../../components/hotel/HotelsList.jsx";
+import { HotelsManager } from "../../components/hotel/HotelsManager.jsx";
 import { UserProfileModal } from "../../components/UserProfileModal";
 
-const { Title, Text } = Typography;
 const { Header, Content } = Layout;
+const { Title } = Typography;
 
-export const Dashboard = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+export const HotelsPage = () => {
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const { role } = user;
+
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Podrías cargar usuario aquí si fuera necesario
   }, []);
 
   return (
@@ -35,7 +34,7 @@ export const Dashboard = () => {
           }}
         >
           <Title level={3} style={{ margin: 0 }}>
-            Panel Principal
+            Gestión de Hoteles
           </Title>
 
           <Button
@@ -52,21 +51,9 @@ export const Dashboard = () => {
           </Button>
         </Header>
 
-        <Content
-          style={{
-            padding: 24,
-            background: "#f0f2f5",
-            minHeight: "calc(100vh - 64px)",
-          }}
-        >
-          <Title level={2}>Bienvenido, {user?.username || "Usuario"}</Title>
-          <Text>Este es tu panel principal.</Text>
-
-          <div style={{ marginTop: 24 }}>
-            <Button type="primary" onClick={() => navigate("/hotels")}>
-              Ver Hoteles
-            </Button>
-          </div>
+        <Content style={{ padding: 20, background: "#f0f2f5" }}>
+          {role === "HOTEL_ADMIN" && <HotelsList />}
+          {(role === "CLIENT" || role === "PLATFORM_ADMIN") && <HotelsManager />}
         </Content>
       </Layout>
 

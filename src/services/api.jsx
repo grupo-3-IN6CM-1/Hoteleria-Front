@@ -37,3 +37,59 @@ export const register = async(data) => {
         }
     }
 }
+
+export const getHotels = async () => {
+  try {
+    return await apiClient.get('/hotels');
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+}
+
+export const getHotelById = async (id) => {
+  try {
+    return await apiClient.get(`/hotels/${id}`);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+}
+
+export const createHotel = async (hotelData) => {
+  try {
+    return await apiClient.post('/hotels', hotelData);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+}
+
+export const updateHotel = async (id, hotelData) => {
+  try {
+    return await apiClient.put(`/hotels/${id}`, hotelData);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+}
+
+export const deleteHotel = async (id) => {
+  try {
+    return await apiClient.delete(`/hotels/${id}`);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+}
+
