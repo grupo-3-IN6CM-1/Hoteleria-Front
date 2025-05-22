@@ -22,7 +22,7 @@ export const DashboardCard = ({ title, subtitle, onClick, icon }) => {
         </div>
 
         <button className="dashboard-card-button" type="button" onClick={onClick}>
-          Acción
+          Ver más
         </button>
       </div>
     </SpotlightCard>
