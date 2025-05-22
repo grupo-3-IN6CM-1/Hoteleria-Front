@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Button, Layout, Avatar } from "antd";
-import { UserOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { 
+  UserOutlined, 
+  CalendarOutlined, 
+  UsergroupAddOutlined, 
+  HistoryOutlined, 
+  HomeOutlined 
+} from "@ant-design/icons";
+
 import { Sidebar } from "../../components/sidebar/Sidebar.jsx";
 import { UserProfileModal } from "../../components/UserProfileModal";
+import { DashboardCard } from "../../components/card/DashboardCard.jsx";
 
 const { Title, Text } = Typography;
 const { Header, Content } = Layout;
 
 export const Dashboard = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -19,6 +25,7 @@ export const Dashboard = () => {
       setUser(JSON.parse(storedUser));
     }
   }, []);
+
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -62,6 +69,36 @@ export const Dashboard = () => {
           <Title level={2}>Bienvenido, {user?.username || "Usuario"}</Title>
           <Text>Este es tu panel principal.</Text>
 
+          <div
+            style={{
+              marginTop: 32,
+              display: "flex",
+              gap: 20,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <DashboardCard
+              icon={<CalendarOutlined />}
+              title="Haz una reservación ya!"
+              subtitle="Reserva tu habitación en segundos"
+            />
+            <DashboardCard
+              icon={<UsergroupAddOutlined />}
+              title="Quiero hacer un evento"
+              subtitle="Organiza tu evento con nosotros"
+            />
+            <DashboardCard
+              icon={<HistoryOutlined />}
+              title="Mi historial de reservaciones"
+              subtitle="Consulta tus reservas anteriores"
+            />
+            <DashboardCard
+              icon={<HomeOutlined />}
+              title="Mi habitación"
+              subtitle="Accede a tu habitación y servicios"
+            />
+          </div>
         </Content>
       </Layout>
 
