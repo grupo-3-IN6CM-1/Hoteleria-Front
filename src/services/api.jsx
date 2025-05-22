@@ -38,6 +38,17 @@ export const register = async(data) => {
     }
 }
 
+export const getUsersByRole = async (role) => {
+  try {
+    return await apiClient.get('/users', { params: { role } });
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
+
 export const getHotels = async () => {
   try {
     return await apiClient.get('/hotels');

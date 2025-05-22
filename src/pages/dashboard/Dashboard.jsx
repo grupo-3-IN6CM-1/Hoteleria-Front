@@ -62,11 +62,6 @@ export const Dashboard = () => {
           <Title level={2}>Bienvenido, {user?.username || "Usuario"}</Title>
           <Text>Este es tu panel principal.</Text>
 
-          <div style={{ marginTop: 24 }}>
-            <Button type="primary" onClick={() => navigate("/hotels")}>
-              Ver Hoteles
-            </Button>
-          </div>
         </Content>
       </Layout>
 

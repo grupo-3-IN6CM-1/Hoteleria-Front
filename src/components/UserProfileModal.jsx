@@ -7,7 +7,7 @@ export const UserProfileModal = ({ visible, onClose, user }) => {
   return (
     <Modal
       title="Información de Perfil"
-      visible={visible}
+      open={visible}
       onCancel={onClose}
       footer={[
         <Button key="close" type="primary" onClick={onClose}>

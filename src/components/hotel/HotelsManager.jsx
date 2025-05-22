@@ -1,104 +1,175 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
-  List,
+  Form,
   Input,
-  Spin,
-  Alert,
+  Select,
+  Checkbox,
+  Button,
+  message,
   Card,
   Typography,
-  Empty,
+  Spin,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import { useHotels } from "../../shared/hooks/useHotels";
+import { createHotel, updateHotel } from "../../services/api";
+import { useAdmins } from "../../shared/hooks/useAdmins";
 
 const { Title } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
 
-export const HotelsManager = () => {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  // No usamos role ni hotelAdminId para filtrar
-  // Solo usamos para mostrar la lista completa
-  
-  const { hotels = [], isLoading, error } = useHotels(); // quitamos filtros para traer todos los hoteles
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredHotels, setFilteredHotels] = useState([]);
+const amenitiesOptions = [
+  "WIFI",
+  "PISCINA",
+  "RESTAURANTE",
+  "GYM",
+  "SPA",
+  "ESTACIONAMIENTO",
+  "SERVICIO_HABITACION",
+];
+
+const categoryOptions = [
+  "ECONOMICO",
+  "FAMILIAR",
+  "NEGOCIOS",
+  "RESORT",
+  "LUJO",
+];
+
+export const HotelsManager = ({ hotel, onAdded }) => {
+  const [form] = Form.useForm();
+  const { admins, loading, error } = useAdmins();
 
   useEffect(() => {
-    // Siempre filtramos todos los hoteles por el searchTerm
-    setFilteredHotels(
-      hotels.filter((hotel) =>
-        hotel.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [searchTerm, hotels]);
+    if (hotel) {
+      form.setFieldsValue({
+        name: hotel.name,
+        address: hotel.address,
+        description: hotel.description,
+        category: hotel.category,
+        amenities: hotel.amenities,
+        admin: hotel.admin?.uid || hotel.admin || undefined,
+      });
+    } else {
+      form.resetFields();
+    }
+  }, [hotel]);
 
-  if (isLoading)
-    return (
-      <Spin
-        tip="Cargando hoteles..."
-        size="large"
-        style={{ display: "block", margin: "40px auto" }}
-      />
-    );
+  const onFinish = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        amenities: values.amenities ? values.amenities.map((a) => a.toUpperCase()) : [],
+        category: values.category.toUpperCase(),
+        admin: values.admin,
+      };
 
-  if (error)
-    return (
-      <Alert
-        message="Error al cargar hoteles"
-        description={error.message}
-        type="error"
-        showIcon
-        style={{ margin: "20px" }}
-      />
-    );
+      let res;
+      if (hotel) {
+        // Editar hotel existente
+        res = await updateHotel(hotel._id, payload);
+      } else {
+        // Crear hotel nuevo
+        res = await createHotel(payload);
+      }
+
+      if (res.error) throw res.e;
+
+      message.success(hotel ? "Hotel actualizado correctamente" : "Hotel agregado correctamente");
+      form.resetFields();
+      if (onAdded) onAdded();
+    } catch (error) {
+      message.error(error.response?.data?.msg || "Error al guardar hotel");
+    }
+  };
 
   return (
     <Card
       style={{
-        maxWidth: 800,
-        margin: "40px auto",
+        maxWidth: 700,
+        margin: "auto",
         padding: 24,
         borderRadius: 12,
         boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-        backgroundColor: "#fff",
       }}
     >
       <Title level={3} style={{ textAlign: "center", marginBottom: 24, color: "#1890ff" }}>
-        Lista de Hoteles
+        {hotel ? "Editar Hotel" : "Agregar Nuevo Hotel"}
       </Title>
 
-      <Input
-        prefix={<SearchOutlined style={{ color: "#1890ff" }} />}
-        placeholder="Buscar hoteles por nombre"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        allowClear
-        style={{
-          marginBottom: 24,
-          borderRadius: 6,
-          transition: "box-shadow 0.3s ease",
-        }}
-        onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 8px #1890ff")}
-        onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-        aria-label="Buscar hoteles"
-      />
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form.Item
+          label="Nombre"
+          name="name"
+          rules={[{ required: true, message: "Por favor ingresa el nombre del hotel" }]}
+        >
+          <Input placeholder="Nombre del hotel" />
+        </Form.Item>
 
-      {filteredHotels.length === 0 ? (
-        <Empty description="No se encontraron hoteles" />
-      ) : (
-        <List
-          bordered
-          style={{ maxHeight: 420, overflowY: "auto", borderRadius: 6 }}
-          dataSource={filteredHotels}
-          renderItem={(hotel) => (
-            <List.Item key={hotel._id || hotel.id || hotel.name}>
-              <List.Item.Meta
-                title={hotel.name}
-                description={hotel.address}
-              />
-            </List.Item>
+        <Form.Item
+          label="Dirección"
+          name="address"
+          rules={[{ required: true, message: "Por favor ingresa la dirección" }]}
+        >
+          <Input placeholder="Dirección del hotel" />
+        </Form.Item>
+
+        <Form.Item
+          label="Descripción"
+          name="description"
+          rules={[
+            { required: true, message: "Por favor ingresa la descripción" },
+            { max: 500, message: "La descripción no puede exceder 500 caracteres" },
+          ]}
+        >
+          <TextArea rows={4} placeholder="Descripción del hotel" />
+        </Form.Item>
+
+        <Form.Item
+          label="Categoría"
+          name="category"
+          rules={[{ required: true, message: "Por favor selecciona la categoría" }]}
+        >
+          <Select placeholder="Selecciona una categoría">
+            {categoryOptions.map((cat) => (
+              <Option key={cat} value={cat}>
+                {cat}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="Encargado"
+          name="admin"
+          rules={[{ required: true, message: "Por favor selecciona un encargado" }]}
+        >
+          {loading ? (
+            <Spin />
+          ) : error ? (
+            <p>Error cargando encargados</p>
+          ) : (
+            <Select placeholder="Selecciona un encargado" allowClear>
+              {admins
+                .filter((admin) => admin.uid != null)
+                .map((admin) => (
+                  <Option key={admin.uid} value={admin.uid}>
+                    {admin.name || admin.username || admin.email}
+                  </Option>
+                ))}
+            </Select>
           )}
-        />
-      )}
+        </Form.Item>
+
+        <Form.Item label="Servicios" name="amenities">
+          <Checkbox.Group options={amenitiesOptions} />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            {hotel ? "Guardar Cambios" : "Agregar Hotel"}
+          </Button>
+        </Form.Item>
+      </Form>
     </Card>
   );
 };

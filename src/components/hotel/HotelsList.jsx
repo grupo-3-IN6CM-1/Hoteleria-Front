@@ -6,23 +6,25 @@ import { HotelCardExpandible } from "../hotel/HotelCardExpansible";
 
 const { Title } = Typography;
 
-export const HotelsList = () => {
+export const HotelsList = ({ onSelectHotel, selectedHotel }) => {
   const { hotels = [], isLoading, error } = useHotels();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredHotels, setFilteredHotels] = useState([]);
 
   useEffect(() => {
-    console.log("Hoteles recibidos:", hotels);
     const filtered = hotels.filter((hotel) =>
       hotel.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    console.log("Hoteles filtrados:", filtered);
     setFilteredHotels(filtered);
   }, [searchTerm, hotels]);
 
   if (isLoading)
     return (
-      <Spin tip="Cargando hoteles..." size="large" style={{ display: "block", margin: "40px auto" }} />
+      <Spin
+        tip="Cargando hoteles..."
+        size="large"
+        style={{ display: "block", margin: "40px auto" }}
+      />
     );
 
   if (error)
@@ -54,7 +56,10 @@ export const HotelsList = () => {
 
   return (
     <div style={{ maxWidth: 900, margin: "40px auto" }}>
-      <Title level={3} style={{ textAlign: "center", marginBottom: 24, color: "#1890ff" }}>
+      <Title
+        level={3}
+        style={{ textAlign: "center", marginBottom: 24, color: "#1890ff" }}
+      >
         Lista de Hoteles
       </Title>
 
@@ -77,7 +82,20 @@ export const HotelsList = () => {
         }}
       >
         {filteredHotels.map((hotel) => (
-          <HotelCardExpandible key={hotel._id} hotel={hotel} />
+          <div
+            key={hotel._id}
+            onClick={() => onSelectHotel && onSelectHotel(hotel)}
+            style={{
+              border:
+                selectedHotel?._id === hotel._id
+                  ? "2px rgb(253, 253, 253)"
+                  : "none",
+              borderRadius: 8,
+              cursor: "pointer",
+            }}
+          >
+            <HotelCardExpandible hotel={hotel} />
+          </div>
         ))}
       </div>
     </div>
