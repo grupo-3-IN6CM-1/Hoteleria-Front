@@ -9,7 +9,7 @@ import {
   DashboardOutlined,
   TeamOutlined,
   CheckCircleOutlined,
-  ApartmentOutlined,   // Ícono para hoteles en lugar de HotelOutlined
+  ApartmentOutlined,
   CalendarOutlined,
   FileTextOutlined,
   UsergroupAddOutlined,
@@ -41,6 +41,7 @@ const menuItemsByRole = {
     { key: "dashboard", label: "Dashboard", icon: <DashboardOutlined /> },
     { key: "users", label: "Usuarios", icon: <UsergroupAddOutlined /> },
     { key: "hotels", label: "Hoteles", icon: <ApartmentOutlined /> },
+        { key: "rooms", label: "Habitaciones", icon: <ApartmentOutlined /> },
     { key: "events", label: "Eventos", icon: <CalendarOutlined /> },
     { key: "reports", label: "Estadísticas / Reportes", icon: <PieChartOutlined /> },
     { key: "security", label: "Seguridad / Configuración", icon: <SettingOutlined /> },

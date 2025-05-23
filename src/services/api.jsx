@@ -104,3 +104,69 @@ export const deleteHotel = async (id) => {
   }
 }
 
+export const getRooms = async () => {
+  try {
+    return await apiClient.get('/rooms');
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+
+export const getRoomById = async (id) => {
+  try {
+    return await apiClient.get(`/rooms/${id}`);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const createRoom = async (roomData) => {
+  try {
+    return await apiClient.post('/rooms', roomData);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const updateRoom = async (id, roomData) => {
+  try {
+    return await apiClient.put(`/rooms/${id}`, roomData);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const deleteRoom = async (id) => {
+  try {
+    return await apiClient.delete(`/rooms/${id}`);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const getRoomsByHotel = async (hotelId) => {
+  try {
+    return await apiClient.get(`/rooms/hotel/${hotelId}`);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
