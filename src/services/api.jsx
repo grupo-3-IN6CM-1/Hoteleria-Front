@@ -170,3 +170,58 @@ export const getRoomsByHotel = async (hotelId) => {
     };
   }
 };
+
+export const getReservations = async () => {
+  try {
+    return await apiClient.get("/reservations");
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
+
+export const createReservation = async (reservationData) => {
+  try {
+    return await apiClient.post('/reservations', reservationData);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const getReservationsByUsername= async (username) => {
+  try {
+    return await apiClient.get(`/reservations/by-username?username=${username}`);
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const updateReservationStatus = async (id, status) => {
+  try {
+    return await apiClient.put(`/reservations/${id}/status`, { status });
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
+
+export const getReservationsByAdmin = async (adminId) => {
+  try {
+    return await apiClient.get(`/reservations/by-admin/${adminId}`);
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
