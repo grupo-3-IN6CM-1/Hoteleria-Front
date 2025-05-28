@@ -1,4 +1,4 @@
-// src/pages/reservation/ReservationsPage.jsx
+// src/pages/room/ReservationsPage.jsx
 import React, { useState, useEffect } from "react";
 import {
   Layout,
@@ -13,6 +13,7 @@ import {
   Select,
   Alert,
   message,
+  Spin,
 } from "antd";
 import { UserOutlined, PlusOutlined } from "@ant-design/icons";
 import { Sidebar } from "../../components/sidebar/Sidebar";
@@ -20,7 +21,7 @@ import SpotlightCard from "../../components/card/SpotlightCard";
 import {
   createReservation,
   getReservationsByUsername,
-  getMyReservations,      
+  getMyReservations,      // renombrado para HOTEL_ADMIN
   getReservations,
   updateReservationStatus,
 } from "../../services/api";
@@ -43,21 +44,20 @@ export const ReservationsPage = () => {
   const [alert, setAlert] = useState({ type: null, message: "" });
   const [form] = Form.useForm();
 
-  const { hotels } = useHotels(user?.role, user?.hotel);
+  const { hotels } = useHotels(user?.role, user?.uid);
   const { rooms } = useRoomsByHotel(selectedHotel);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Carga usuario de localStorage
+  // Cargo el usuario
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
   }, []);
 
-  // Carga reservaciones según rol
+  // Cargo las reservaciones según rol
   useEffect(() => {
     if (!user) return;
-
     const fetch = async () => {
       setLoading(true);
       try {
@@ -66,26 +66,36 @@ export const ReservationsPage = () => {
           res = await getReservations();
         } else if (user.role === "HOTEL_ADMIN") {
           res = await getMyReservations();
-        } else if (user.role === "CLIENT") {
+        } else {
           res = await getReservationsByUsername(user.username);
         }
-
-        if (!res.error) {
-          setReservations(res.data.reservations || []);
-        } else {
-          message.error("Error al cargar reservaciones");
-        }
+        if (!res.error) setReservations(res.data.reservations || []);
+        else message.error("Error al cargar reservaciones");
       } catch {
         message.error("Error de conexión al cargar reservaciones");
       } finally {
         setLoading(false);
       }
     };
-
     fetch();
   }, [user]);
 
-  // Crear nueva reservación (CLIENT)
+  // Handler para marcar como pagada
+  const handlePayReservation = async (id) => {
+    try {
+      const res = await updateReservationStatus(id, "COMPLETED");
+      if (!res.error) {
+        message.success("Reservación pagada");
+        // refresca lista
+        const updated = await getReservationsByUsername(user.username);
+        setReservations(updated.data.reservations || []);
+      }
+    } catch {
+      message.error("Error al procesar el pago");
+    }
+  };
+
+  // Handler de creación (CLIENT)
   const handleFinish = async (values) => {
     const [checkIn, checkOut] = values.dateRange;
     const data = {
@@ -94,214 +104,251 @@ export const ReservationsPage = () => {
       checkIn: checkIn.toISOString(),
       checkOut: checkOut.toISOString(),
     };
-
+    setAlert({ type: null, message: "" });
     try {
       const res = await createReservation(data);
       if (!res.error) {
-        setAlert({ type: "success", message: "¡Reservación creada exitosamente!" });
+        setAlert({ type: "success", message: "¡Reservación creada!" });
         form.resetFields();
         setSelectedRoomInfo(null);
-
-        // Actualiza lista de reservas cliente
+        // refresca lista
         const updated = await getReservationsByUsername(user.username);
         setReservations(updated.data.reservations || []);
-
         setTimeout(() => {
           setFormModalVisible(false);
           setAlert({ type: null, message: "" });
-        }, 2000);
+        }, 1500);
       } else {
         setAlert({
           type: "error",
-          message: res.e?.response?.data?.msg || "Error al registrar reservación",
+          message: res.e?.response?.data?.msg || "Error al crear reserva",
         });
       }
     } catch {
-      setAlert({
-        type: "error",
-        message: "Error inesperado al intentar registrar la reservación",
-      });
+      setAlert({ type: "error", message: "Error inesperado" });
     }
   };
 
-  // Marcar pagada (CLIENT)
-  const handlePayReservation = async (id) => {
-    try {
-      const res = await updateReservationStatus(id, "COMPLETED");
-      if (!res.error) {
-        message.success("Reservación pagada con éxito ✅");
-        const updated = await getReservationsByUsername(user.username);
-        setReservations(updated.data.reservations || []);
-      }
-    } catch {
-      message.error("Error al procesar el pago ❌");
-    }
-  };
-
+  // Inicio del render
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar />
+
       <Layout style={{ marginLeft: 250 }}>
-        <Header className="header-bar">
-          <Title level={3} style={{ margin: 0 }}>Reservaciones</Title>
+        <Header
+          style={{
+            background: "#fff",
+            padding: "0 24px",
+            display: "flex",
+            alignItems: "center",
+            boxShadow: "0 2px 8px #f0f1f2",
+          }}
+        >
+          <Title level={3} style={{ margin: 0 }}>
+            Reservaciones
+          </Title>
           <Button
             type="text"
             onClick={() => setProfileVisible(true)}
-            className="user-button"
+            style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}
           >
             <Avatar
               icon={<UserOutlined />}
               size="small"
-              style={{ backgroundColor: "#1890ff" }}
+              style={{ backgroundColor: "#1890ff", marginRight: 8 }}
             />
-            <span>{user?.username || "Usuario"}</span>
+            {user?.username}
           </Button>
         </Header>
 
-        <Content style={{ padding: 24, background: "#f0f2f5" }}>
-          <Row gutter={[16, 16]}>
+        <Content
+          style={{
+            padding: 20,
+            background: "#f0f2f5",
+            overflowY: "auto",
+            maxHeight: "calc(100vh - 64px)", // ajusta según la altura del Header
+          }}
+        >
+          <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
+            {/* Tarjeta de “+” sólo para CLIENT */}
             {user?.role === "CLIENT" && (
-              <Col span={8}>
+              <Col xs={24} sm={12} md={8} lg={6} xl={4}>
                 <div
-                  onClick={() => setFormModalVisible(true)}
                   style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    form.resetFields();
+                    setSelectedRoomInfo(null);
+                    setFormModalVisible(true);
+                  }}
                 >
-                  <SpotlightCard spotlightColor="rgba(255, 255, 255, 0.3)">
-                    <div className="reservation-card-add">
-                      <PlusOutlined style={{ fontSize: "84px" }} />
+                  <SpotlightCard spotlightColor="rgba(0, 123, 255, 0.3)">
+                    <div
+                      style={{
+                        height: 200,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        color: "white",
+                      }}
+                    >
+                      <PlusOutlined style={{ fontSize: "48px" }} />
                     </div>
                   </SpotlightCard>
                 </div>
               </Col>
             )}
 
-            {!loading && reservations.map((r) => (
-              <Col span={8} key={r._id}>
-                <SpotlightCard spotlightColor="rgba(255, 255, 255, 0.3)">
-                  <div className="reservation-card">
-                    {/* Muestra quién reservó */}
-                    <p><b>Reservado por:</b> {r.user?.username || "—"}</p>
-                    <Title level={4} style={{ color: "white" }} className="card-title">
-                      {r.hotel?.name}
-                    </Title>
-                    <p><b>Habitación:</b> {r.room?.number} ({r.room?.type})</p>
-                    <p>
-                      <b>Fechas:</b>{" "}
-                      {new Date(r.checkIn).toLocaleDateString()} –{" "}
-                      {new Date(r.checkOut).toLocaleDateString()}
-                    </p>
-                    <p><b>Total:</b> ${r.totalPrice}</p>
-                    <p><b>Estado:</b> {r.status}</p>
-                    {user?.role === "CLIENT" && r.status === "CONFIRMED" && (
-                      <Button
-                        type="dark"
-                        style={{ color: "white" }}
-                        onClick={() => handlePayReservation(r._id)}
-                      >
-                        Pagar ahora
-                      </Button>
-                    )}
-                  </div>
-                </SpotlightCard>
+            {/* Tarjetas de reservaciones */}
+            {!loading &&
+              reservations.map((r) => (
+                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={r._id}>
+                  <SpotlightCard spotlightColor="rgba(0,0,0,0.5)">
+                    <div style={{ padding: 16, color: "white" }}>
+                      <p>
+                        <b>Reservado por:</b> {r.user?.username}
+                      </p>
+                      <Title level={4} style={{ color: "white" }}>
+                        {r.hotel?.name}
+                      </Title>
+                      <p>
+                        <b>Habitación:</b> {r.room?.number} ({r.room?.type})
+                      </p>
+                      <p>
+                        <b>Fechas:</b>{" "}
+                        {new Date(r.checkIn).toLocaleDateString()}—
+                        {new Date(r.checkOut).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <b>Total:</b> ${r.totalPrice}
+                      </p>
+                      <p>
+                        <b>Estado:</b> {r.status}
+                      </p>
+                      {user?.role === "CLIENT" && r.status === "CONFIRMED" && (
+                        <Button
+                          style={{ marginTop: 8 }}
+                          onClick={() => handlePayReservation(r._id)}
+                        >
+                          Pagar ahora
+                        </Button>
+                      )}
+                    </div>
+                  </SpotlightCard>
+                </Col>
+              ))}
+
+            {/* Spinner mientras carga */}
+            {loading && (
+              <Col span={24} style={{ textAlign: "center", marginTop: 40 }}>
+                <Spin size="large" />
               </Col>
-            ))}
-          </Row>
-
-          <Modal
-            title="Crear Nueva Reservación"
-            open={formModalVisible}
-            onCancel={() => {
-              form.resetFields();
-              setSelectedRoomInfo(null);
-              setAlert({ type: null, message: "" });
-              setFormModalVisible(false);
-            }}
-            footer={null}
-          >
-            {alert.type && (
-              <Alert
-                message={alert.message}
-                type={alert.type}
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
             )}
-
-            <Form layout="vertical" form={form} onFinish={handleFinish}>
-              <Form.Item
-                name="hotel"
-                label="Hotel"
-                rules={[{ required: true, message: "Seleccione un hotel" }]}
-              >
-                <Select
-                  placeholder="Seleccionar hotel"
-                  onChange={(value) => {
-                    form.setFieldsValue({ room: undefined });
-                    setSelectedHotel(value);
-                    setSelectedRoomInfo(null);
-                  }}
-                >
-                  {hotels.map((hotel) => (
-                    <Option key={hotel._id} value={hotel._id}>
-                      {hotel.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                name="room"
-                label="Habitación"
-                rules={[{ required: true, message: "Seleccione una habitación" }]}
-              >
-                <Select
-                  placeholder="Seleccionar habitación"
-                  disabled={!selectedHotel}
-                  onChange={(roomId) => {
-                    const room = rooms.find((r) => r._id === roomId);
-                    setSelectedRoomInfo(room || null);
-                    form.setFieldsValue({ room: roomId });
-                  }}
-                >
-                  {rooms.map((room) => (
-                    <Option key={room._id} value={room._id}>
-                      Habitación {room.number}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              {selectedRoomInfo && (
-                <div className="room-info-box">
-                  <p><b>Tipo:</b> {selectedRoomInfo.type}</p>
-                  <p><b>Precio por noche:</b> ${selectedRoomInfo.pricePerNight}</p>
-                  <p><b>Descripción:</b> {selectedRoomInfo.description}</p>
-                </div>
-              )}
-
-              <Form.Item
-                name="dateRange"
-                label="Fechas de reservación"
-                rules={[{ required: true, message: "Seleccione fechas" }]}
-              >
-                <RangePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
-              </Form.Item>
-
-              <Form.Item>
-                <Button type="primary" htmlType="submit" block>
-                  Registrar Reservación
-                </Button>
-              </Form.Item>
-            </Form>
-          </Modal>
-
-          <UserProfileModal
-            visible={profileVisible}
-            onClose={() => setProfileVisible(false)}
-            user={user}
-          />
+          </Row>
         </Content>
       </Layout>
+
+      {/* Modal de perfil */}
+      <UserProfileModal
+        visible={profileVisible}
+        onClose={() => setProfileVisible(false)}
+        user={user}
+      />
+
+      {/* Modal de creación (CLIENT) */}
+      <Modal
+        title="Crear Nueva Reservación"
+        open={formModalVisible}
+        onCancel={() => {
+          form.resetFields();
+          setSelectedRoomInfo(null);
+          setAlert({ type: null, message: "" });
+          setFormModalVisible(false);
+        }}
+        footer={null}
+      >
+        {alert.type && (
+          <Alert
+            message={alert.message}
+            type={alert.type}
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        <Form layout="vertical" form={form} onFinish={handleFinish}>
+          <Form.Item
+            name="hotel"
+            label="Hotel"
+            rules={[{ required: true, message: "Seleccione un hotel" }]}
+          >
+            <Select
+              placeholder="Seleccionar hotel"
+              onChange={(value) => {
+                form.setFieldsValue({ room: undefined });
+                setSelectedHotel(value);
+                setSelectedRoomInfo(null);
+              }}
+            >
+              {hotels.map((h) => (
+                <Option key={h._id} value={h._id}>
+                  {h.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="room"
+            label="Habitación"
+            rules={[{ required: true, message: "Seleccione una habitación" }]}
+          >
+            <Select
+              placeholder="Seleccionar habitación"
+              disabled={!selectedHotel}
+              onChange={(rid) => {
+                const rm = rooms.find((x) => x._id === rid);
+                setSelectedRoomInfo(rm || null);
+                form.setFieldsValue({ room: rid });
+              }}
+            >
+              {rooms.map((room) => (
+                <Option key={room._id} value={room._id}>
+                  Habitación {room.number}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {selectedRoomInfo && (
+            <div style={{ marginBottom: 16 }}>
+              <p>
+                <b>Tipo:</b> {selectedRoomInfo.type}
+              </p>
+              <p>
+                <b>Precio por noche:</b> ${selectedRoomInfo.pricePerNight}
+              </p>
+              <p>
+                <b>Descripción:</b> {selectedRoomInfo.description}
+              </p>
+            </div>
+          )}
+
+          <Form.Item
+            name="dateRange"
+            label="Fechas de reservación"
+            rules={[{ required: true, message: "Seleccione fechas" }]}
+          >
+            <RangePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Registrar Reservación
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 };
