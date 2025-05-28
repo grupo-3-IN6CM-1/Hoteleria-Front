@@ -1,3 +1,5 @@
+/* src/components/card/SpotLightCard.css */
+
 .card-spotlight {
   position: relative;
   border-radius: 1.5rem;
@@ -6,9 +8,12 @@
   padding: 2rem;
   overflow: hidden;
 
-  /* FIJAR AHORA ANCHO Y ALTO */
+  /* ————— FIJAR AHORA ANCHO Y ALTO ————— */
   width: 280px;    /* ancho deseado */
   height: 380px;   /* alto deseado */
+
+  /* centrar y separar únicamente en vertical */
+  margin: 0 auto 16px; /* 16px de espacio abajo */
 
   --mouse-x: 50%;
   --mouse-y: 50%;
