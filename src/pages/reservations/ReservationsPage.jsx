@@ -1,3 +1,4 @@
+// src/pages/reservation/ReservationsPage.jsx
 import React, { useState, useEffect } from "react";
 import {
   Layout,
@@ -19,7 +20,7 @@ import SpotlightCard from "../../components/card/SpotlightCard";
 import {
   createReservation,
   getReservationsByUsername,
-  getReservationsByAdmin,
+  getMyReservations,      
   getReservations,
   updateReservationStatus,
 } from "../../services/api";
@@ -47,22 +48,24 @@ export const ReservationsPage = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Carga usuario de localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
   }, []);
 
+  // Carga reservaciones según rol
   useEffect(() => {
     if (!user) return;
 
-    const fetchReservations = async () => {
+    const fetch = async () => {
+      setLoading(true);
       try {
         let res;
-
         if (user.role === "PLATFORM_ADMIN") {
           res = await getReservations();
-        } else if (user.role === "HOTEL_ADMIN" && user._id) {
-          res = await getReservationsByAdmin(user._id);
+        } else if (user.role === "HOTEL_ADMIN") {
+          res = await getMyReservations();
         } else if (user.role === "CLIENT") {
           res = await getReservationsByUsername(user.username);
         }
@@ -79,11 +82,10 @@ export const ReservationsPage = () => {
       }
     };
 
-    fetchReservations();
+    fetch();
   }, [user]);
 
-
-
+  // Crear nueva reservación (CLIENT)
   const handleFinish = async (values) => {
     const [checkIn, checkOut] = values.dateRange;
     const data = {
@@ -100,6 +102,7 @@ export const ReservationsPage = () => {
         form.resetFields();
         setSelectedRoomInfo(null);
 
+        // Actualiza lista de reservas cliente
         const updated = await getReservationsByUsername(user.username);
         setReservations(updated.data.reservations || []);
 
@@ -116,11 +119,12 @@ export const ReservationsPage = () => {
     } catch {
       setAlert({
         type: "error",
-        message: " Error inesperado al intentar registrar la reservación",
+        message: "Error inesperado al intentar registrar la reservación",
       });
     }
   };
 
+  // Marcar pagada (CLIENT)
   const handlePayReservation = async (id) => {
     try {
       const res = await updateReservationStatus(id, "COMPLETED");
@@ -140,8 +144,16 @@ export const ReservationsPage = () => {
       <Layout style={{ marginLeft: 250 }}>
         <Header className="header-bar">
           <Title level={3} style={{ margin: 0 }}>Reservaciones</Title>
-          <Button type="text" onClick={() => setProfileVisible(true)} className="user-button">
-            <Avatar icon={<UserOutlined />} size="small" style={{ backgroundColor: "#1890ff" }} />
+          <Button
+            type="text"
+            onClick={() => setProfileVisible(true)}
+            className="user-button"
+          >
+            <Avatar
+              icon={<UserOutlined />}
+              size="small"
+              style={{ backgroundColor: "#1890ff" }}
+            />
             <span>{user?.username || "Usuario"}</span>
           </Button>
         </Header>
@@ -150,7 +162,10 @@ export const ReservationsPage = () => {
           <Row gutter={[16, 16]}>
             {user?.role === "CLIENT" && (
               <Col span={8}>
-                <div onClick={() => setFormModalVisible(true)} style={{ cursor: "pointer" }}>
+                <div
+                  onClick={() => setFormModalVisible(true)}
+                  style={{ cursor: "pointer" }}
+                >
                   <SpotlightCard spotlightColor="rgba(255, 255, 255, 0.3)">
                     <div className="reservation-card-add">
                       <PlusOutlined style={{ fontSize: "84px" }} />
@@ -164,13 +179,25 @@ export const ReservationsPage = () => {
               <Col span={8} key={r._id}>
                 <SpotlightCard spotlightColor="rgba(255, 255, 255, 0.3)">
                   <div className="reservation-card">
-                    <Title level={4} style={{color:"white"}} className="card-title">{r.hotel?.name}</Title>
+                    {/* Muestra quién reservó */}
+                    <p><b>Reservado por:</b> {r.user?.username || "—"}</p>
+                    <Title level={4} style={{ color: "white" }} className="card-title">
+                      {r.hotel?.name}
+                    </Title>
                     <p><b>Habitación:</b> {r.room?.number} ({r.room?.type})</p>
-                    <p><b>Fechas:</b> {new Date(r.checkIn).toLocaleDateString()} - {new Date(r.checkOut).toLocaleDateString()}</p>
+                    <p>
+                      <b>Fechas:</b>{" "}
+                      {new Date(r.checkIn).toLocaleDateString()} –{" "}
+                      {new Date(r.checkOut).toLocaleDateString()}
+                    </p>
                     <p><b>Total:</b> ${r.totalPrice}</p>
                     <p><b>Estado:</b> {r.status}</p>
                     {user?.role === "CLIENT" && r.status === "CONFIRMED" && (
-                      <Button type="dark" style={{ color: "white" }} onClick={() => handlePayReservation(r._id)}>
+                      <Button
+                        type="dark"
+                        style={{ color: "white" }}
+                        onClick={() => handlePayReservation(r._id)}
+                      >
                         Pagar ahora
                       </Button>
                     )}
@@ -192,30 +219,54 @@ export const ReservationsPage = () => {
             footer={null}
           >
             {alert.type && (
-              <Alert message={alert.message} type={alert.type} showIcon style={{ marginBottom: 16 }} />
+              <Alert
+                message={alert.message}
+                type={alert.type}
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
             )}
 
             <Form layout="vertical" form={form} onFinish={handleFinish}>
-              <Form.Item name="hotel" label="Hotel" rules={[{ required: true, message: "Seleccione un hotel" }]}> 
-                <Select placeholder="Seleccionar hotel" onChange={(value) => {
-                  form.setFieldsValue({ room: undefined });
-                  setSelectedHotel(value);
-                  setSelectedRoomInfo(null);
-                }}>
+              <Form.Item
+                name="hotel"
+                label="Hotel"
+                rules={[{ required: true, message: "Seleccione un hotel" }]}
+              >
+                <Select
+                  placeholder="Seleccionar hotel"
+                  onChange={(value) => {
+                    form.setFieldsValue({ room: undefined });
+                    setSelectedHotel(value);
+                    setSelectedRoomInfo(null);
+                  }}
+                >
                   {hotels.map((hotel) => (
-                    <Option key={hotel._id} value={hotel._id}>{hotel.name}</Option>
+                    <Option key={hotel._id} value={hotel._id}>
+                      {hotel.name}
+                    </Option>
                   ))}
                 </Select>
               </Form.Item>
 
-              <Form.Item name="room" label="Habitación" rules={[{ required: true, message: "Seleccione una habitación" }]}> 
-                <Select placeholder="Seleccionar habitación" disabled={!selectedHotel} onChange={(roomId) => {
-                  const room = rooms.find((r) => r._id === roomId);
-                  setSelectedRoomInfo(room || null);
-                  form.setFieldsValue({ room: roomId });
-                }}>
+              <Form.Item
+                name="room"
+                label="Habitación"
+                rules={[{ required: true, message: "Seleccione una habitación" }]}
+              >
+                <Select
+                  placeholder="Seleccionar habitación"
+                  disabled={!selectedHotel}
+                  onChange={(roomId) => {
+                    const room = rooms.find((r) => r._id === roomId);
+                    setSelectedRoomInfo(room || null);
+                    form.setFieldsValue({ room: roomId });
+                  }}
+                >
                   {rooms.map((room) => (
-                    <Option key={room._id} value={room._id}>Habitación {room.number}</Option>
+                    <Option key={room._id} value={room._id}>
+                      Habitación {room.number}
+                    </Option>
                   ))}
                 </Select>
               </Form.Item>
@@ -228,7 +279,11 @@ export const ReservationsPage = () => {
                 </div>
               )}
 
-              <Form.Item name="dateRange" label="Fechas de reservación" rules={[{ required: true, message: "Seleccione fechas" }]}> 
+              <Form.Item
+                name="dateRange"
+                label="Fechas de reservación"
+                rules={[{ required: true, message: "Seleccione fechas" }]}
+              >
                 <RangePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
               </Form.Item>
 
@@ -240,7 +295,11 @@ export const ReservationsPage = () => {
             </Form>
           </Modal>
 
-          <UserProfileModal visible={profileVisible} onClose={() => setProfileVisible(false)} user={user} />
+          <UserProfileModal
+            visible={profileVisible}
+            onClose={() => setProfileVisible(false)}
+            user={user}
+          />
         </Content>
       </Layout>
     </Layout>

@@ -190,6 +190,14 @@ export const getReservations = async () => {
   }
 };
 
+export const getMyReservations = async () => {
+  try {
+    return await apiClient.get('/reservations/my');
+  } catch (e) {
+    return { error: true, e };
+  }
+};
+
 export const createReservation = async (reservationData) => {
   try {
     return await apiClient.post('/reservations', reservationData);
