@@ -159,8 +159,8 @@ export const RoomsPage = () => {
           {loadingRooms ? (
             <Spin tip="Cargando habitaciones..." style={{ display: "block", margin: "40px auto" }} />
           ) : (
-            <Row gutter={[16,16]} style={{ marginTop: 20 }}>
-              <Col span={4}>
+            <Row gutter={[0,16]} style={{ marginTop: 20 }}>
+              <Col span={6}>
                 <div onClick={openCreateModal} style={{ cursor: "pointer" }}>
                   <SpotlightCard spotlightColor="rgba(0, 123, 255, 0.3)">
                     <div style={{
@@ -173,7 +173,7 @@ export const RoomsPage = () => {
                 </div>
               </Col>
               {rooms.map(room => (
-                <Col span={4} key={room._id}>
+                <Col span={6} key={room._id}>
                   <SpotlightCard spotlightColor="rgba(255,255,255,0.35)">
                     <div style={{ padding: 16, borderRadius: 12, color: "white" }}>
                       <Title level={4} style={{ color: "white" }}>

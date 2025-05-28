@@ -5,8 +5,6 @@ import {
   Typography,
   Button,
   Avatar,
-  Row,
-  Col,
   Modal,
   Form,
   DatePicker,
@@ -21,7 +19,7 @@ import SpotlightCard from "../../components/card/SpotlightCard";
 import {
   createReservation,
   getReservationsByUsername,
-  getMyReservations,      // renombrado para HOTEL_ADMIN
+  getMyReservations,
   getReservations,
   updateReservationStatus,
 } from "../../services/api";
@@ -80,13 +78,12 @@ export const ReservationsPage = () => {
     fetch();
   }, [user]);
 
-  // Handler para marcar como pagada
+  // Marcar como pagada
   const handlePayReservation = async (id) => {
     try {
       const res = await updateReservationStatus(id, "COMPLETED");
       if (!res.error) {
         message.success("Reservación pagada");
-        // refresca lista
         const updated = await getReservationsByUsername(user.username);
         setReservations(updated.data.reservations || []);
       }
@@ -95,7 +92,7 @@ export const ReservationsPage = () => {
     }
   };
 
-  // Handler de creación (CLIENT)
+  // Crear nueva reservación
   const handleFinish = async (values) => {
     const [checkIn, checkOut] = values.dateRange;
     const data = {
@@ -111,7 +108,6 @@ export const ReservationsPage = () => {
         setAlert({ type: "success", message: "¡Reservación creada!" });
         form.resetFields();
         setSelectedRoomInfo(null);
-        // refresca lista
         const updated = await getReservationsByUsername(user.username);
         setReservations(updated.data.reservations || []);
         setTimeout(() => {
@@ -129,7 +125,6 @@ export const ReservationsPage = () => {
     }
   };
 
-  // Inicio del render
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar />
@@ -166,45 +161,40 @@ export const ReservationsPage = () => {
             padding: 20,
             background: "#f0f2f5",
             overflowY: "auto",
-            maxHeight: "calc(100vh - 64px)", // ajusta según la altura del Header
+            maxHeight: "calc(100vh - 64px)",
           }}
         >
-          <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
-            {/* Tarjeta de “+” sólo para CLIENT */}
-            {user?.role === "CLIENT" && (
-              <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-                <div
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    form.resetFields();
-                    setSelectedRoomInfo(null);
-                    setFormModalVisible(true);
-                  }}
-                >
-                  <SpotlightCard spotlightColor="rgba(0, 123, 255, 0.3)">
-                    <div
-                      style={{
-                        height: 200,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        color: "white",
-                      }}
-                    >
-                      <PlusOutlined style={{ fontSize: "48px" }} />
-                    </div>
-                  </SpotlightCard>
+          {loading ? (
+            <div style={{ textAlign: "center", marginTop: 40 }}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <div className="reservations-grid">
+              {/* Tarjeta “+” para CLIENT */}
+              {user?.role === "CLIENT" && (
+                <div className="reservation-cell">
+                  <div
+                    className="reservation-add-wrapper"
+                    onClick={() => {
+                      form.resetFields();
+                      setSelectedRoomInfo(null);
+                      setFormModalVisible(true);
+                    }}
+                  >
+                    <SpotlightCard spotlightColor="rgba(0, 123, 255, 0.3)">
+                      <div className="reservation-add-content">
+                        <PlusOutlined style={{ fontSize: 48 }} />
+                      </div>
+                    </SpotlightCard>
+                  </div>
                 </div>
-              </Col>
-            )}
+              )}
 
-            {/* Tarjetas de reservaciones */}
-            {!loading &&
-              reservations.map((r) => (
-                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={r._id}>
+              {/* Tarjetas de reservaciones */}
+              {reservations.map((r) => (
+                <div key={r._id} className="reservation-cell">
                   <SpotlightCard spotlightColor="rgba(0,0,0,0.5)">
-                    <div style={{ padding: 16, color: "white" }}>
+                    <div className="reservation-card-content">
                       <p>
                         <b>Reservado por:</b> {r.user?.username}
                       </p>
@@ -216,7 +206,7 @@ export const ReservationsPage = () => {
                       </p>
                       <p>
                         <b>Fechas:</b>{" "}
-                        {new Date(r.checkIn).toLocaleDateString()}—
+                        {new Date(r.checkIn).toLocaleDateString()} —{" "}
                         {new Date(r.checkOut).toLocaleDateString()}
                       </p>
                       <p>
@@ -235,27 +225,19 @@ export const ReservationsPage = () => {
                       )}
                     </div>
                   </SpotlightCard>
-                </Col>
+                </div>
               ))}
-
-            {/* Spinner mientras carga */}
-            {loading && (
-              <Col span={24} style={{ textAlign: "center", marginTop: 40 }}>
-                <Spin size="large" />
-              </Col>
-            )}
-          </Row>
+            </div>
+          )}
         </Content>
       </Layout>
 
-      {/* Modal de perfil */}
       <UserProfileModal
         visible={profileVisible}
         onClose={() => setProfileVisible(false)}
         user={user}
       />
 
-      {/* Modal de creación (CLIENT) */}
       <Modal
         title="Crear Nueva Reservación"
         open={formModalVisible}
