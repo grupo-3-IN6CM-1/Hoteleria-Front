@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { getRoomsByHotel } from "../../services/api";
 import { message } from "antd";
 
 export const useRoomsByHotel = (hotelId) => {
   const [rooms, setRooms] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -13,13 +13,18 @@ export const useRoomsByHotel = (hotelId) => {
     const fetchRooms = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
-        const response = await axios.get(`http://localhost:3000/Hoteleria/v1/rooms/hotel/${hotelId}`);
-        setRooms(response.data.rooms || []);
+        const res = await getRoomsByHotel(hotelId);
+        if (res.error) throw res.e;
+
+        const raw = Array.isArray(res.data)
+          ? res.data
+          : res.data.rooms || [];
+
+        setRooms(raw);
       } catch (err) {
         setError(err);
-        message.error("Error al cargar las habitaciones");
+        message.error("Error al cargar habitaciones");
       } finally {
         setIsLoading(false);
       }

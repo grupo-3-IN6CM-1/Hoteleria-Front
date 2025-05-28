@@ -19,15 +19,18 @@ export const useLogin = () => {
     }
 
     const { userDetails } = response.data;
-    const { username, token, role } = userDetails;  // <-- extraemos el role
+
+    const { username, token, role, uid } = userDetails;
 
     if (!token) {
       toast.error("No se recibió token de autenticación");
       return;
     }
 
-    // Guardamos username, token y role en localStorage
-    localStorage.setItem("user", JSON.stringify({ username, token, role }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ username, token, role, uid })
+    );
 
     toast.success("Sesión iniciada correctamente");
     navigate("/dashboard");

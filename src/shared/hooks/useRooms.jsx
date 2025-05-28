@@ -7,14 +7,13 @@ export const useRooms = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Obtener las habitaciones
   const fetchRooms = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await getRooms();
       if (!response.error) {
-        setRooms(response.data.rooms);  // Suponiendo que la respuesta tiene data.rooms
+        setRooms(response.data.rooms);  
       } else {
         setError(response.e);
         message.error("Error al cargar las habitaciones");
@@ -27,7 +26,6 @@ export const useRooms = () => {
     }
   };
 
-  // Crear nueva habitación
   const createNewRoom = async (roomData) => {
     setLoading(true);
     setError(null);
@@ -48,7 +46,6 @@ export const useRooms = () => {
     }
   };
 
-  // Editar habitación existente
   const editExistingRoom = async (roomId, updatedData) => {
     setLoading(true);
     setError(null);
@@ -73,7 +70,6 @@ export const useRooms = () => {
     }
   };
 
-  // Eliminar habitación
   const deleteExistingRoom = async (roomId) => {
     setLoading(true);
     setError(null);
@@ -94,7 +90,6 @@ export const useRooms = () => {
     }
   };
 
-  // Fetch rooms when the hook is first used
   useEffect(() => {
     fetchRooms();
   }, []);

@@ -160,6 +160,14 @@ export const deleteRoom = async (id) => {
   }
 };
 
+export const getMyHotels = async () => {
+  try {
+    return await apiClient.get('/hotels/my');
+  } catch (e) {
+    return { error: true, e };
+  }
+};
+
 export const getRoomsByHotel = async (hotelId) => {
   try {
     return await apiClient.get(`/rooms/hotel/${hotelId}`);
