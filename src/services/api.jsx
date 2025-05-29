@@ -249,3 +249,54 @@ export const getReservationsByAdmin = async (adminId) => {
     };
   }
 };
+
+export const getTopRooms = async () => {
+  try {
+    const res = await apiClient.get("/reservations/top-rooms");
+    return res.data.topRooms; 
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
+
+export const getTopHotels = async () => {
+  try {
+    const res = await apiClient.get("/reservations/top-hotels");
+    return res.data.topHotels;
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
+
+export const getMonthlyRevenue = async () => {
+  try {
+    const res = await axios.get("/invoices/monthly-revenue");
+    return res.data.data;
+  } catch (error) {
+    return { error };
+  }
+};
+
+export const createInvoice = async (invoiceData) => {
+  try {
+    const res = await apiClient.post("/invoice", invoiceData);
+    return res.data.invoice;
+  } catch (e) {
+    return { error: true, e };
+  }
+};
+
+export const updateInvoiceStatus = async (id, status) => {
+  try {
+    const res = await apiClient.put(`/invoices/${id}/status`, { status });
+    return res.data.invoice;
+  } catch (e) {
+    return { error: true, e };
+  }
+};

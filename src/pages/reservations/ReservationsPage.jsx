@@ -1,4 +1,3 @@
-// src/pages/room/ReservationsPage.jsx
 import React, { useState, useEffect } from "react";
 import {
   Layout,
@@ -41,19 +40,16 @@ export const ReservationsPage = () => {
   const [selectedRoomInfo, setSelectedRoomInfo] = useState(null);
   const [alert, setAlert] = useState({ type: null, message: "" });
   const [form] = Form.useForm();
-
   const { hotels } = useHotels(user?.role, user?.uid);
   const { rooms } = useRoomsByHotel(selectedHotel);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargo el usuario
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
   }, []);
 
-  // Cargo las reservaciones según rol
   useEffect(() => {
     if (!user) return;
     const fetch = async () => {
@@ -78,7 +74,6 @@ export const ReservationsPage = () => {
     fetch();
   }, [user]);
 
-  // Marcar como pagada
   const handlePayReservation = async (id) => {
     try {
       const res = await updateReservationStatus(id, "COMPLETED");
@@ -86,13 +81,14 @@ export const ReservationsPage = () => {
         message.success("Reservación pagada");
         const updated = await getReservationsByUsername(user.username);
         setReservations(updated.data.reservations || []);
+      } else {
+        message.error("Error al pagar la reservación");
       }
     } catch {
-      message.error("Error al procesar el pago");
+      message.error("Error inesperado al procesar el pago");
     }
   };
 
-  // Crear nueva reservación
   const handleFinish = async (values) => {
     const [checkIn, checkOut] = values.dateRange;
     const data = {
@@ -128,7 +124,6 @@ export const ReservationsPage = () => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar />
-
       <Layout style={{ marginLeft: 250 }}>
         <Header
           style={{
@@ -155,7 +150,6 @@ export const ReservationsPage = () => {
             {user?.username}
           </Button>
         </Header>
-
         <Content
           style={{
             padding: 20,
@@ -170,7 +164,6 @@ export const ReservationsPage = () => {
             </div>
           ) : (
             <div className="reservations-grid">
-              {/* Tarjeta “+” para CLIENT */}
               {user?.role === "CLIENT" && (
                 <div className="reservation-cell">
                   <div
@@ -190,7 +183,6 @@ export const ReservationsPage = () => {
                 </div>
               )}
 
-              {/* Tarjetas de reservaciones */}
               {reservations.map((r) => (
                 <div key={r._id} className="reservation-cell">
                   <SpotlightCard spotlightColor="rgba(0,0,0,0.5)">
@@ -218,6 +210,7 @@ export const ReservationsPage = () => {
                       {user?.role === "CLIENT" && r.status === "CONFIRMED" && (
                         <Button
                           style={{ marginTop: 8 }}
+                          type="primary"
                           onClick={() => handlePayReservation(r._id)}
                         >
                           Pagar ahora
@@ -231,13 +224,11 @@ export const ReservationsPage = () => {
           )}
         </Content>
       </Layout>
-
       <UserProfileModal
         visible={profileVisible}
         onClose={() => setProfileVisible(false)}
         user={user}
       />
-
       <Modal
         title="Crear Nueva Reservación"
         open={formModalVisible}
@@ -257,7 +248,6 @@ export const ReservationsPage = () => {
             style={{ marginBottom: 16 }}
           />
         )}
-
         <Form layout="vertical" form={form} onFinish={handleFinish}>
           <Form.Item
             name="hotel"
@@ -279,7 +269,6 @@ export const ReservationsPage = () => {
               ))}
             </Select>
           </Form.Item>
-
           <Form.Item
             name="room"
             label="Habitación"
@@ -301,7 +290,6 @@ export const ReservationsPage = () => {
               ))}
             </Select>
           </Form.Item>
-
           {selectedRoomInfo && (
             <div style={{ marginBottom: 16 }}>
               <p>
@@ -315,7 +303,6 @@ export const ReservationsPage = () => {
               </p>
             </div>
           )}
-
           <Form.Item
             name="dateRange"
             label="Fechas de reservación"
@@ -323,7 +310,6 @@ export const ReservationsPage = () => {
           >
             <RangePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
           </Form.Item>
-
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
               Registrar Reservación
