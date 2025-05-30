@@ -333,3 +333,33 @@ export const getClients = async () => {
     return { error: true, e };
   }
 };
+
+export const getAllUsers = async () => {
+  try {
+    return await apiClient.get('/users/all');
+  } catch (e) {
+    return {
+      error: true,
+      e
+    };
+  }
+};
+
+export const updateMyProfile = async (id, data) => {
+  try {
+    return await apiClient.put(`/users/me/${id}`, data);
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};
+
+export const getMyProfile = async () => {
+  try {
+    return await apiClient.get('/users/me');
+  } catch (e) {
+    return { error: true, e };
+  }
+};
