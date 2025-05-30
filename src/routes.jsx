@@ -5,6 +5,7 @@ import { ReservationsPage } from './pages/reservations/ReservationsPage';
 import { RoomsPage } from './pages/room/RoomsPage'
 import { GuestsPage } from './pages/guest/GuestsPage'
 import { ReportsPage } from './pages/reports/ReportsPage';
+import { EventPage } from './pages/events/EventPage';
 
 const routes = [
     {path: '/', element: <Auth />},
@@ -14,6 +15,7 @@ const routes = [
     { path: '/rooms', element: <RoomsPage /> },
     { path: '/guests', element: <GuestsPage /> },
     { path: '/reports', element: <ReportsPage /> },
+    { path: '/events', element: <EventPage/> },
 ]
 
 export default routes

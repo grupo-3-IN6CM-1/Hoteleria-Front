@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { Sidebar } from "../../components/sidebar/Sidebar";
 import { UserProfileModal } from "../../components/UserProfileModal";
-import SpotlightCard from "../../components/card/SpotlightCard";
+import SpotlightCard from "../../components/card/SpotLightCard";
 import { useMyHotels } from "../../shared/hooks/useMyHotels";
 import {
   getRoomsByHotel,

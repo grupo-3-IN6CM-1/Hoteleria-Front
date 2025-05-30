@@ -1,0 +1,39 @@
+.event-layout {
+  min-height: 100vh;
+}
+
+.event-inner-layout {
+  margin-left: 250px; /* Asegúrate que coincida con el ancho del Sidebar */
+}
+
+.event-header {
+  background: #fff;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px #f0f1f2;
+}
+
+.event-title {
+  margin: 0;
+}
+
+.event-user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-username {
+  color: #000;
+}
+
+.event-content {
+  padding: 20px;
+  background: #f0f2f5;
+}
+
+.event-welcome-text {
+  color: #000;
+}

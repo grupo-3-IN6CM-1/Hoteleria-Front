@@ -300,3 +300,36 @@ export const updateInvoiceStatus = async (id, status) => {
     return { error: true, e };
   }
 };
+
+export const getEvents = async () => {
+  try {
+    const res = await apiClient.get("/events");
+    return res.data.events;
+  } catch (e) {
+    return { error: true, e };
+  }
+};
+
+export const fetchEvents = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+
+    if (filters.hotelId) params.append("hotelId", filters.hotelId);
+    if (filters.userId) params.append("userId", filters.userId);
+
+    const res = await apiClient.get(`/events?${params.toString()}`);
+    return res.data.events;
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    throw error;
+  }
+};
+
+export const getClients = async () => {
+  try {
+    const res = await apiClient.get("/users/clients");
+    return res.data.clients;
+  } catch (e) {
+    return { error: true, e };
+  }
+};
